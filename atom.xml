@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://theandroidmanifest.github.io/atom.xml" rel="self"/>
   <link href="http://theandroidmanifest.github.io/"/>
-  <updated>2014-02-16T16:01:26-08:00</updated>
+  <updated>2014-02-16T16:36:11-08:00</updated>
   <id>http://theandroidmanifest.github.io/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
