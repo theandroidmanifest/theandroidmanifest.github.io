@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title><![CDATA[My Octopress Blog]]></title>
-  <link href="http://theandroidmanifest.github.io/atom.xml" rel="self"/>
-  <link href="http://theandroidmanifest.github.io/"/>
-  <updated>2014-02-16T16:36:11-08:00</updated>
-  <id>http://theandroidmanifest.github.io/</id>
+  <title><![CDATA[The Android Manifest]]></title>
+  <link href="http://www.theandroidmanifest.com/atom.xml" rel="self"/>
+  <link href="http://www.theandroidmanifest.com/"/>
+  <updated>2014-02-16T16:44:04-08:00</updated>
+  <id>http://www.theandroidmanifest.com/</id>
   <author>
-    <name><![CDATA[Your Name]]></name>
-    
+    <name><![CDATA[Vince Mi]]></name>
+    <email><![CDATA[info@theandroidmanifest.com]]></email>
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
   
   <entry>
     <title type="html"><![CDATA[Hello World]]></title>
-    <link href="http://theandroidmanifest.github.io/blog/2014/02/16/hello-world/"/>
+    <link href="http://www.theandroidmanifest.com/blog/2014/02/16/hello-world/"/>
     <updated>2014-02-16T15:57:12-08:00</updated>
-    <id>http://theandroidmanifest.github.io/blog/2014/02/16/hello-world</id>
+    <id>http://www.theandroidmanifest.com/blog/2014/02/16/hello-world</id>
     <content type="html"><![CDATA[<h2>Welcome to The Android Manifest!</h2>
 ]]></content>
   </entry>
