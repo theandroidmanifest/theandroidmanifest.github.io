@@ -3,7 +3,7 @@
   <title><![CDATA[The Android Manifest]]></title>
   <link href="http://www.theandroidmanifest.com/atom.xml" rel="self"/>
   <link href="http://www.theandroidmanifest.com/"/>
-  <updated>2014-02-16T16:45:52-08:00</updated>
+  <updated>2014-02-16T16:46:31-08:00</updated>
   <id>http://www.theandroidmanifest.com/</id>
   <author>
     <name><![CDATA[Vince Mi]]></name>
@@ -17,7 +17,7 @@
     <link href="http://www.theandroidmanifest.com/blog/2014/02/16/hello-world/"/>
     <updated>2014-02-16T15:57:12-08:00</updated>
     <id>http://www.theandroidmanifest.com/blog/2014/02/16/hello-world</id>
-    <content type="html"><![CDATA[<p>Welcome to The Android Manifest!</p>
+    <content type="html"><![CDATA[<p>Welcome to The Android Manifest! I&rsquo;m still figuring this space out&hellip;</p>
 ]]></content>
   </entry>
   
