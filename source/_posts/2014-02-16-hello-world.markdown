@@ -6,4 +6,4 @@ comments: true
 categories: 
 ---
 
-## Welcome to The Android Manifest!
+Welcome to The Android Manifest! I'm still figuring this space out...
