@@ -4,7 +4,7 @@
   <title><![CDATA[My Octopress Blog]]></title>
   <link href="http://theandroidmanifest.github.io/atom.xml" rel="self"/>
   <link href="http://theandroidmanifest.github.io/"/>
-  <updated>2014-02-16T15:50:42-08:00</updated>
+  <updated>2014-02-16T16:01:26-08:00</updated>
   <id>http://theandroidmanifest.github.io/</id>
   <author>
     <name><![CDATA[Your Name]]></name>
@@ -12,5 +12,14 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World]]></title>
+    <link href="http://theandroidmanifest.github.io/blog/2014/02/16/hello-world/"/>
+    <updated>2014-02-16T15:57:12-08:00</updated>
+    <id>http://theandroidmanifest.github.io/blog/2014/02/16/hello-world</id>
+    <content type="html"><![CDATA[<h2>Welcome to The Android Manifest!</h2>
+]]></content>
+  </entry>
   
 </feed>
