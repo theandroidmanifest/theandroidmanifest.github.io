@@ -1,0 +1,214 @@
+---
+layout: post
+title: "Proper Adapter Use for Efficient ListViews in Android"
+date: 2014-03-08 22:51:58 -0800
+comments: true
+categories: 
+---
+
+In my experience [`Adapters`][1] are one of the most basic, yet commonly
+misunderstood parts of Android. And because the role of Adapters is to provide
+repeated views to `AdapterViews` such as `ListView`s and `GridView`s, the
+performance implications are often much higher than other components. So I
+thought I'd share the Adapter patterns that I've settled into after writing 
+
+## The Adapter as a data source
+
+One of the first misconceptions about Adapters I'd like to cover is that a
+single Adapter instance is necessarily tied to a single instance of a view, or
+even a single set of data. Neither of which is true. So you could, in theory,
+run two ListViews from the same Adapter. But more importantly you can (and
+should) re-use a single Adapter instance instead of creating a new one each
+time your data changes. This pattern also allows you to use the Adapter as a
+temporary store for data during the Activity lifecycle as opposed to holding
+on to a separate instance of a `data` object that you have to keep in sync
+with the UI.
+
+Here's an example of how I would instantiate an Adapter in a Fragment:
+```java
+public class SomeFragment extends Fragment {
+    // keep reference to Adapter and ListView
+    SomeAdapter mAdapter;
+    ListView mListView;
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_some);
+        // get reference to ListView
+        ListView listView = (ListView) view.findViewById(android.R.id.list);
+        return view;
+    }
+
+    @Override public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        mAdapter = new SomeAdapter(getActivity().getLayoutInflater());
+        mListView.setAdapter(mAdapter);
+    }
+}
+
+```
+
+I'm purposely instantiating the adapter separately from the ListView to
+illustrate that the two are not related. You can, and should, just use one
+instance of an Adapter througout your Activity or Fragment to avoid excess
+allocations and GC. This also helps your ListViews maintain state through
+configuration changes (e.g. rotation, keyboard, etc.).
+
+Notice how I attach the adapter to the ListView in `onActivityCreated`.
+__`ListView.setAdapter` should be called once and only once.__ Once you bind
+the Adapter, there's never really a good reason to switch the adapter of a
+ListView. If you want to change the data in the ListView, you should update
+the data in the Adapter, not set a new Adapter on the ListView. I will show
+you how this is done in the next section.
+
+Also note that I am passing the Adapter a `LayoutInflater`, which we will need
+later to inflate the views created by the Adapter. I'm also purposely using a
+Fragment as an example to show when during the Lifecycle you should
+instantiate the Adapter. While theoretically you could also do this in
+`onAttach(activity)`, the parent Activity's `onCreate` method is not
+guaranteed to have executed by then, so if you're relying on anything
+instanted from the Activity's onCreate, or even if you're not, it's probably
+safest best to just do things in `onActivityCreated`.
+
+## Extending BaseAdapter
+
+The second thing I notice among some Android devs is a fear of extending
+[`BaseAdapter`][2]. I'd like to remedy that right now and say this: __Always
+extend BaseAdapter.__ With the only exceptions being  populating very basic
+lists with with an `ArrayAdapter` or even better, the [`android:entries`][3]
+attribute. Otherwise `BaseAdapter` really isn't hard to implement and will
+give you much greater flexibility in the future in case you need to add more
+viewtypes (which I will talk about in part 2) or do other custom
+things, which undoubtedly will happen.
+
+So how do you properly implement a `BaseAdapter`? There are actually only 4
+required methods:
+
+```java
+public class SomeAdapter extends BaseAdapter {
+
+    // instantiate things to 0 length list so it's never null
+    List<Thing> mThings = new ArrayList<Thing>(0);
+    final LayoutInflater mInflater;
+
+    public SomeAdapter(LayoutInflater inflater) {
+        mInflater = inflater;
+    }
+
+    @Override
+    public int getCount() {
+        return mThings.size();
+    }
+
+    @Override
+    public Thing getItem(int position) {
+        return mThings.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        // if Thing doesn't have an ID, you can just return position here
+        return mThings.get(position).getId();
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // TODO inflate and populate view here
+        return null;
+    }
+
+    public void swapData(List<Thing> things) {
+        if (things == null) {
+            // again, so mThings is never null
+            things = new ArrayList<Thing>(0);
+        }
+        mThings = things;
+        notifyDataSetChanged();
+    }
+}
+```
+
+See that wasn't that bad right? We're mostly just wrapping the `size` and
+`get` functions of our `ArrayList` `mThings`. We also get a reference to a
+`LayoutInflater` which we'll use in the next part to inflate our views.
+
+The only custom function here is `swapData(newThings)`. Remember
+how I said you don't need to create a new instance of an adapter every time
+your data changes? This is how it's done. If we ever get a new list of
+`Thing`s to show (e.g. from a network request or a database query), we just
+call `mAdapter.swapData(newListOfThings)` and any attached ListViews or
+GridViews will be automatically updated. Just don't forget to call
+`notifyDataSetChanged()` to tell any attached AdapterViews to refresh.
+
+Note how I instantiate `mThings` to an empty `ArrayList` immediately and also
+do a null check in `swapData()`. This way we don't have `NullPointerException`s
+every time we access `mThings`, like in `getCount()`, `getItem()` and `getItemId()`.
+
+
+## Inflating Views
+
+Oddly, this part might be what's most familiar to developers because it's
+probably one of the most well known Android performance quirks: the
+`convertView`. This is the key to fast scrolling performance on Android. To
+illustrate this point, let's first do things __the wrong way:__
+
+```java
+public class SomeAdapter extends BaseAdapter {
+    final LayoutInflater mInflater;
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        // inflate a new view
+        View view = mInflater.inflate(R.layout.item_loading, parent, false);
+
+        // get the Thing at this position
+        Thing thing = getItem(position); 
+
+        // set the view title to the title of the Thing
+        ((TextView) view.findViewById(R.id.title)).setText(thing.title);
+
+        return view;
+    }
+    // ... other functions ... 
+}
+```
+
+Now, this will work, and will inflate your `item_some.xml` and display your
+view, but it will be horribly inefficient. And the reason is because
+__`getView()` is called every time a list item *comes into view*.__ Think
+about that for a second. Every time you scroll a list item onto the screen,
+you're inflating the same xml to create a brand new view.
+
+But you don't really need a whole new view every time do you? What if we just
+gave you one of the views that scrolled off the other side of the ListView,
+and you updated the title since that's the only thing that changed? Well
+that's exactly what `convertView` does, and it's called view recycling.
+
+And it's very easy to implement, you just check if `convertView` is null, if
+it's not, you reuse it. For convenience, I renamed the `convertView`
+parameter to `view`:
+
+```java
+    @Override
+    public View getView(int position, View view, ViewGroup parent) {
+        if (view == null) {
+            // inflate a new view if we didn't get a recycled one
+            view = mInflater.inflate(R.layout.item_loading, parent, false);
+        }
+
+        // continue populating the view as usual...
+
+        return view;
+    }
+```
+
+And that's all there is to it. You now have an efficient, custom adapter that
+supports view recycling and swapping data.
+
+In Part 2, I'll expore using ViewTypes to support multiple layouts in an
+adapter, using ViewHolders to simplify and speed up view access, and a few
+other common performance pitfalls related to Adapters and ListViews.
+
+
+[1]: http://developer.android.com/guide/topics/ui/declaring-layout.html#AdapterViews
+[2]: http://developer.android.com/reference/android/widget/BaseAdapter.html
+[3]: http://developer.android.com/reference/android/widget/ListView.html#attr_android:entries

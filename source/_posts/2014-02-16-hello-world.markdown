@@ -6,4 +6,7 @@ comments: true
 categories: 
 ---
 
-Welcome to The Android Manifest! I'm still figuring this space out...
+Welcome to The Android Manifest! This is where I'll be documenting all the
+things I learn in my adventures through the world of Android Development.
+
+Stay tuned.
