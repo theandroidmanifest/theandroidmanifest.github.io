@@ -4,7 +4,7 @@
   <title><![CDATA[The Android Manifest]]></title>
   <link href="http://www.theandroidmanifest.com/atom.xml" rel="self"/>
   <link href="http://www.theandroidmanifest.com/"/>
-  <updated>2014-02-16T17:50:59-08:00</updated>
+  <updated>2014-03-09T01:44:44-08:00</updated>
   <id>http://www.theandroidmanifest.com/</id>
   <author>
     <name><![CDATA[Vince Mi]]></name>
@@ -14,11 +14,310 @@
 
   
   <entry>
+    <title type="html"><![CDATA[Proper Adapter Use for Efficient ListViews in Android]]></title>
+    <link href="http://www.theandroidmanifest.com/blog/2014/03/08/adapters/"/>
+    <updated>2014-03-08T22:51:58-08:00</updated>
+    <id>http://www.theandroidmanifest.com/blog/2014/03/08/adapters</id>
+    <content type="html"><![CDATA[<p>In my experience <a href="http://developer.android.com/guide/topics/ui/declaring-layout.html#AdapterViews"><code>Adapters</code></a> are one of the most basic, yet commonly
+misunderstood parts of Android. And because the role of Adapters is to provide
+repeated views to <code>AdapterViews</code> such as <code>ListView</code>s and <code>GridView</code>s, the
+performance implications are often much higher than other components. So I
+thought I&rsquo;d share the Adapter patterns that I&rsquo;ve settled into after writing</p>
+
+<h2>The Adapter as a data source</h2>
+
+<p>One of the first misconceptions about Adapters I&rsquo;d like to cover is that a
+single Adapter instance is necessarily tied to a single instance of a view, or
+even a single set of data. Neither of which is true. So you could, in theory,
+run two ListViews from the same Adapter. But more importantly you can (and
+should) re-use a single Adapter instance instead of creating a new one each
+time your data changes. This pattern also allows you to use the Adapter as a
+temporary store for data during the Activity lifecycle as opposed to holding
+on to a separate instance of a <code>data</code> object that you have to keep in sync
+with the UI.</p>
+
+<p>Here&rsquo;s an example of how I would instantiate an Adapter in a Fragment:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SomeFragment</span> <span class="kd">extends</span> <span class="n">Fragment</span> <span class="o">{</span>
+</span><span class='line'>    <span class="c1">// keep reference to Adapter and ListView</span>
+</span><span class='line'>    <span class="n">SomeAdapter</span> <span class="n">mAdapter</span><span class="o">;</span>
+</span><span class='line'>    <span class="n">ListView</span> <span class="n">mListView</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">View</span> <span class="nf">onCreateView</span><span class="o">(</span><span class="n">LayoutInflater</span> <span class="n">inflater</span><span class="o">,</span> <span class="n">ViewGroup</span> <span class="n">container</span><span class="o">,</span> <span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">inflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">fragment_some</span><span class="o">);</span>
+</span><span class='line'>        <span class="c1">// get reference to ListView</span>
+</span><span class='line'>        <span class="n">ListView</span> <span class="n">listView</span> <span class="o">=</span> <span class="o">(</span><span class="n">ListView</span><span class="o">)</span> <span class="n">view</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">android</span><span class="o">.</span><span class="na">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">list</span><span class="o">);</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="n">onActivityCreated</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">super</span><span class="o">.</span><span class="na">onActivityCreated</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+</span><span class='line'>        <span class="n">mAdapter</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SomeAdapter</span><span class="o">(</span><span class="n">getActivity</span><span class="o">().</span><span class="na">getLayoutInflater</span><span class="o">());</span>
+</span><span class='line'>        <span class="n">mListView</span><span class="o">.</span><span class="na">setAdapter</span><span class="o">(</span><span class="n">mAdapter</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>I&rsquo;m purposely instantiating the adapter separately from the ListView to
+illustrate that the two are not related. You can, and should, just use one
+instance of an Adapter througout your Activity or Fragment to avoid excess
+allocations and GC. This also helps your ListViews maintain state through
+configuration changes (e.g. rotation, keyboard, etc.).</p>
+
+<p>Notice how I attach the adapter to the ListView in <code>onActivityCreated</code>.
+<strong><code>ListView.setAdapter</code> should be called once and only once.</strong> Once you bind
+the Adapter, there&rsquo;s never really a good reason to switch the adapter of a
+ListView. If you want to change the data in the ListView, you should update
+the data in the Adapter, not set a new Adapter on the ListView. I will show
+you how this is done in the next section.</p>
+
+<p>Also note that I am passing the Adapter a <code>LayoutInflater</code>, which we will need
+later to inflate the views created by the Adapter. I&rsquo;m also purposely using a
+Fragment as an example to show when during the Lifecycle you should
+instantiate the Adapter. While theoretically you could also do this in
+<code>onAttach(activity)</code>, the parent Activity&rsquo;s <code>onCreate</code> method is not
+guaranteed to have executed by then, so if you&rsquo;re relying on anything
+instanted from the Activity&rsquo;s onCreate, or even if you&rsquo;re not, it&rsquo;s probably
+safest best to just do things in <code>onActivityCreated</code>.</p>
+
+<h2>Extending BaseAdapter</h2>
+
+<p>The second thing I notice among some Android devs is a fear of extending
+<a href="http://developer.android.com/reference/android/widget/BaseAdapter.html"><code>BaseAdapter</code></a>. I&rsquo;d like to remedy that right now and say this: <strong>Always
+extend BaseAdapter.</strong> With the only exceptions being  populating very basic
+lists with with an <code>ArrayAdapter</code> or even better, the <a href="http://developer.android.com/reference/android/widget/ListView.html#attr_android:entries"><code>android:entries</code></a>
+attribute. Otherwise <code>BaseAdapter</code> really isn&rsquo;t hard to implement and will
+give you much greater flexibility in the future in case you need to add more
+viewtypes (which I will talk about in part 2) or do other custom
+things, which undoubtedly will happen.</p>
+
+<p>So how do you properly implement a <code>BaseAdapter</code>? There are actually only 4
+required methods:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SomeAdapter</span> <span class="kd">extends</span> <span class="n">BaseAdapter</span> <span class="o">{</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// instantiate things to 0 length list so it&#39;s never null</span>
+</span><span class='line'>    <span class="n">List</span><span class="o">&lt;</span><span class="n">Thing</span><span class="o">&gt;</span> <span class="n">mThings</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Thing</span><span class="o">&gt;(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">LayoutInflater</span> <span class="n">mInflater</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="nf">SomeAdapter</span><span class="o">(</span><span class="n">LayoutInflater</span> <span class="n">inflater</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">mInflater</span> <span class="o">=</span> <span class="n">inflater</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getCount</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">mThings</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">Thing</span> <span class="nf">getItem</span><span class="o">(</span><span class="kt">int</span> <span class="n">position</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">mThings</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">position</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">long</span> <span class="nf">getItemId</span><span class="o">(</span><span class="kt">int</span> <span class="n">position</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// if Thing doesn&#39;t have an ID, you can just return position here</span>
+</span><span class='line'>        <span class="k">return</span> <span class="n">mThings</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">position</span><span class="o">).</span><span class="na">getId</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">View</span> <span class="nf">getView</span><span class="o">(</span><span class="kt">int</span> <span class="n">position</span><span class="o">,</span> <span class="n">View</span> <span class="n">convertView</span><span class="o">,</span> <span class="n">ViewGroup</span> <span class="n">parent</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// TODO inflate and populate view here</span>
+</span><span class='line'>        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">swapData</span><span class="o">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">Thing</span><span class="o">&gt;</span> <span class="n">things</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="k">if</span> <span class="o">(</span><span class="n">things</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="c1">// again, so mThings is never null</span>
+</span><span class='line'>            <span class="n">things</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;</span><span class="n">Thing</span><span class="o">&gt;(</span><span class="mi">0</span><span class="o">);</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>        <span class="n">mThings</span> <span class="o">=</span> <span class="n">things</span><span class="o">;</span>
+</span><span class='line'>        <span class="n">notifyDataSetChanged</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>See that wasn&rsquo;t that bad right? We&rsquo;re mostly just wrapping the <code>size</code> and
+<code>get</code> functions of our <code>ArrayList</code> <code>mThings</code>. We also get a reference to a
+<code>LayoutInflater</code> which we&rsquo;ll use in the next part to inflate our views.</p>
+
+<p>The only custom function here is <code>swapData(newThings)</code>. Remember
+how I said you don&rsquo;t need to create a new instance of an adapter every time
+your data changes? This is how it&rsquo;s done. If we ever get a new list of
+<code>Thing</code>s to show (e.g. from a network request or a database query), we just
+call <code>mAdapter.swapData(newListOfThings)</code> and any attached ListViews or
+GridViews will be automatically updated. Just don&rsquo;t forget to call
+<code>notifyDataSetChanged()</code> to tell any attached AdapterViews to refresh.</p>
+
+<p>Note how I instantiate <code>mThings</code> to an empty <code>ArrayList</code> immediately and also
+do a null check in <code>swapData()</code>. This way we don&rsquo;t have <code>NullPointerException</code>s
+every time we access <code>mThings</code>, like in <code>getCount()</code>, <code>getItem()</code> and <code>getItemId()</code>.</p>
+
+<h2>Inflating Views</h2>
+
+<p>Oddly, this part might be what&rsquo;s most familiar to developers because it&rsquo;s
+probably one of the most well known Android performance quirks: the
+<code>convertView</code>. This is the key to fast scrolling performance on Android. To
+illustrate this point, let&rsquo;s first do things <strong>the wrong way:</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SomeAdapter</span> <span class="kd">extends</span> <span class="n">BaseAdapter</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">final</span> <span class="n">LayoutInflater</span> <span class="n">mInflater</span><span class="o">;</span>
+</span><span class='line'>    <span class="nd">@Override</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="n">View</span> <span class="nf">getView</span><span class="o">(</span><span class="kt">int</span> <span class="n">position</span><span class="o">,</span> <span class="n">View</span> <span class="n">convertView</span><span class="o">,</span> <span class="n">ViewGroup</span> <span class="n">parent</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// inflate a new view</span>
+</span><span class='line'>        <span class="n">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">mInflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">item_loading</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// get the Thing at this position</span>
+</span><span class='line'>        <span class="n">Thing</span> <span class="n">thing</span> <span class="o">=</span> <span class="n">getItem</span><span class="o">(</span><span class="n">position</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// set the view title to the title of the Thing</span>
+</span><span class='line'>        <span class="o">((</span><span class="n">TextView</span><span class="o">)</span> <span class="n">view</span><span class="o">.</span><span class="na">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">title</span><span class="o">)).</span><span class="na">setText</span><span class="o">(</span><span class="n">thing</span><span class="o">.</span><span class="na">title</span><span class="o">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="c1">// ... other functions ... </span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Now, this will work, and will inflate your <code>item_some.xml</code> and display your
+view, but it will be horribly inefficient. And the reason is because
+<strong><code>getView()</code> is called every time a list item <em>comes into view</em>.</strong> Think
+about that for a second. Every time you scroll a list item onto the screen,
+you&rsquo;re inflating the same xml to create a brand new view.</p>
+
+<p>But you don&rsquo;t really need a whole new view every time do you? What if we just
+gave you one of the views that scrolled off the other side of the ListView,
+and you updated the title since that&rsquo;s the only thing that changed? Well
+that&rsquo;s exactly what <code>convertView</code> does, and it&rsquo;s called view recycling.</p>
+
+<p>And it&rsquo;s very easy to implement, you just check if <code>convertView</code> is null, if
+it&rsquo;s not, you reuse it. For convenience, I renamed the <code>convertView</code>
+parameter to <code>view</code>:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="nd">@Override</span>
+</span><span class='line'><span class="kd">public</span> <span class="n">View</span> <span class="nf">getView</span><span class="o">(</span><span class="kt">int</span> <span class="n">position</span><span class="o">,</span> <span class="n">View</span> <span class="n">view</span><span class="o">,</span> <span class="n">ViewGroup</span> <span class="n">parent</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="c1">// inflate a new view if we didn&#39;t get a recycled one</span>
+</span><span class='line'>        <span class="n">view</span> <span class="o">=</span> <span class="n">mInflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">item_loading</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="c1">// continue populating the view as usual...</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>And that&rsquo;s all there is to it. You now have an efficient, custom adapter that
+supports view recycling and swapping data.</p>
+
+<p>In Part 2, I&rsquo;ll expore using ViewTypes to support multiple layouts in an
+adapter, using ViewHolders to simplify and speed up view access, and a few
+other common performance pitfalls related to Adapters and ListViews.</p>
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[Hello World]]></title>
     <link href="http://www.theandroidmanifest.com/blog/2014/02/16/hello-world/"/>
     <updated>2014-02-16T15:57:12-08:00</updated>
     <id>http://www.theandroidmanifest.com/blog/2014/02/16/hello-world</id>
-    <content type="html"><![CDATA[<p>Welcome to The Android Manifest! I&rsquo;m still figuring this space out&hellip;</p>
+    <content type="html"><![CDATA[<p>Welcome to The Android Manifest! This is where I&rsquo;ll be documenting all the
+things I learn in my adventures through the world of Android Development.</p>
+
+<p>Stay tuned.</p>
 ]]></content>
   </entry>
   
