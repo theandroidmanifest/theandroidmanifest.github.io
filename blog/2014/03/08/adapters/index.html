@@ -3,11 +3,11 @@
 <html>
 <head>
 	<meta charset="utf-8">
-	<title>Proper Adapter Use for Efficient ListViews in Android  | The Android Manifest</title>
+	<title>Effective Adapter Use in Android (Part 1)  | The Android Manifest</title>
 
 <meta name="author" content="Vince Mi"> 
 
-<meta name="description" content="In my experience Adapters are one of the most basic, yet commonly
+<meta name="description" content="In my experience, Adapters are one of the most basic yet commonly
 misunderstood parts of Android. And because the role of Adapters is to provide &hellip;"> <meta name="keywords" content="">
 
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -97,12 +97,13 @@ $(document).ready(
 </header>
 
 	<div id="content" class="inner"><article class="post">
-	<h2 class="title">Proper Adapter Use for Efficient ListViews in Android</h2>
-	<div class="entry-content"><p>In my experience <a href="http://developer.android.com/guide/topics/ui/declaring-layout.html#AdapterViews"><code>Adapters</code></a> are one of the most basic, yet commonly
+	<h2 class="title">Effective Adapter Use in Android (Part 1)</h2>
+	<div class="entry-content"><p>In my experience, <a href="http://developer.android.com/guide/topics/ui/declaring-layout.html#AdapterViews"><code>Adapters</code></a> are one of the most basic yet commonly
 misunderstood parts of Android. And because the role of Adapters is to provide
 repeated views to <code>AdapterViews</code> such as <code>ListView</code>s and <code>GridView</code>s, the
 performance implications are often much higher than other components. So I
-thought I&rsquo;d share the Adapter patterns that I&rsquo;ve settled into after writing</p>
+thought I&rsquo;d share the Adapter best practices I&rsquo;ve picked up and polished
+across all the apps I&rsquo;ve written.</p>
 
 <h2>The Adapter as a data source</h2>
 
