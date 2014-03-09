@@ -1,16 +1,17 @@
 ---
 layout: post
-title: "Proper Adapter Use for Efficient ListViews in Android"
+title: "Effective Adapter Use in Android (Part 1)"
 date: 2014-03-08 22:51:58 -0800
 comments: true
 categories: 
 ---
 
-In my experience [`Adapters`][1] are one of the most basic, yet commonly
+In my experience, [`Adapters`][1] are one of the most basic yet commonly
 misunderstood parts of Android. And because the role of Adapters is to provide
 repeated views to `AdapterViews` such as `ListView`s and `GridView`s, the
 performance implications are often much higher than other components. So I
-thought I'd share the Adapter patterns that I've settled into after writing 
+thought I'd share the Adapter best practices I've picked up and polished
+across all the apps I've written.
 
 ## The Adapter as a data source
 
